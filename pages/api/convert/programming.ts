@@ -6,7 +6,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import Papa from 'papaparse';
 import yaml from 'js-yaml';
 
-// Disattiva il bodyParser
+// Disable the default body parser
 export const config = {
   api: {
     bodyParser: false,
@@ -15,7 +15,7 @@ export const config = {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Metodo non consentito' });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const form = formidable({
@@ -33,6 +33,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const from = Array.isArray(data.fields.from) ? data.fields.from[0] : data.fields.from;
   const to = Array.isArray(data.fields.to) ? data.fields.to[0] : data.fields.to;
   const file = Array.isArray(data.files.file) ? data.files.file[0] : data.files.file;
+
+  // Check uploaded file extension matches the selected 'from' format
+  const uploadedExt = path.extname(file.originalFilename || '').replace('.', '').toLowerCase();
+  const expectedExt = from.toLowerCase();
+
+  if (uploadedExt !== expectedExt) {
+    return res.status(400).json({
+      error: `The uploaded file has extension .${uploadedExt}, but you selected .${expectedExt} as source format.`,
+    });
+  }
+
   const inputPath = file.filepath;
   const inputName = path.basename(file.originalFilename || 'file');
 
@@ -71,7 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    // Base64 ↔ Testo
+    // Base64 ↔ Text
     else if ((from === 'base64' && to === 'text') || (from === 'text' && to === 'base64')) {
       if (from === 'base64') {
         converted = Buffer.from(content, 'base64').toString('utf-8');
@@ -84,15 +95,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
+    // Unsupported conversion
     else {
-      return res.status(400).json({ error: 'Conversione non supportata' });
+      return res.status(400).json({ error: 'Unsupported conversion' });
     }
 
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.status(200).send(converted);
 
   } catch (err) {
-    console.error('Errore durante la conversione:', err);
-    res.status(500).json({ error: 'Errore durante la conversione' });
+    console.error('Error during conversion:', err);
+    res.status(500).json({ error: 'An error occurred during conversion' });
   }
 }

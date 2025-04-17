@@ -13,7 +13,7 @@ export const config = {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Metodo non consentito' });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const uploadDir = os.tmpdir();
@@ -37,7 +37,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const file = Array.isArray(data.files.file) ? data.files.file[0] : data.files.file;
 
     if (!file || !from || !to) {
-      return res.status(400).json({ error: 'Dati mancanti: file, from o to' });
+      return res.status(400).json({ error: 'Missing data: file, from, or to' });
+    }
+
+    // Extract the actual extension of the uploaded file
+    const uploadedExt = path.extname(file.originalFilename || '').replace('.', '').toLowerCase();
+    const expectedExt = from.toLowerCase();
+
+    // Check if extension matches selected format
+    if (uploadedExt !== expectedExt) {
+      return res.status(400).json({
+        error: `The uploaded file has extension .${uploadedExt}, but you selected .${expectedExt} as source format.`,
+      });
     }
 
     const inputPath = file.filepath;
@@ -46,12 +57,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const fileBuffer = fs.readFileSync(inputPath);
 
-    // --- DOCX or HTML to PDF (libreoffice) ---
+    // --- DOCX or HTML to PDF ---
     if ((from === 'docx' || from === 'html') && to === 'pdf') {
       libre.convert(fileBuffer, 'pdf', undefined, (err, converted) => {
         if (err) {
-          console.error('Errore LibreOffice:', err);
-          return res.status(500).json({ error: 'Errore durante la conversione' });
+          console.error('LibreOffice error:', err);
+          return res.status(500).json({ error: 'Error during conversion' });
         }
 
         fs.writeFileSync(outputPath, converted);
@@ -81,11 +92,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     return res.status(400).json({
-      error: `Conversione da .${from} a .${to} non supportata.`,
+      error: `Conversion from .${from} to .${to} is not supported.`,
     });
 
   } catch (error) {
-    console.error('Errore durante la conversione:', error);
-    return res.status(500).json({ error: 'Errore interno del server' });
+    console.error('Conversion error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }

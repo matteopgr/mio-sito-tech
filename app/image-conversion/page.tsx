@@ -41,7 +41,16 @@ export default function ImageConvertPage() {
       });
 
       if (!res.ok) {
-        throw new Error('Error during conversion');
+        // Prova a leggere il messaggio di errore restituito dal server
+        let errorMessage = 'Error during conversion';
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData?.error || errorMessage;
+        } catch {
+          // Fallback se non è un JSON valido
+          errorMessage = await res.text();
+        }
+        throw new Error(errorMessage);
       }
 
       const blob = await res.blob();
@@ -55,7 +64,7 @@ export default function ImageConvertPage() {
       setMessage('✅ Conversion completed!');
     } catch (error) {
       console.error(error);
-      setMessage('❌ Error during conversion.');
+      setMessage(`❌ Error during conversion: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 

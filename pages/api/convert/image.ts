@@ -5,23 +5,21 @@ import os from 'os';
 import sharp from 'sharp';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-// Disabilita il bodyParser di Next.js
 export const config = {
   api: {
     bodyParser: false,
   },
 };
 
-// Formati di immagine supportati
+// Supported image formats
 const validFormats = ['jpeg', 'jpg', 'png', 'webp', 'gif'];
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Metodo non consentito' });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const uploadDir = os.tmpdir();
-
   const form = new IncomingForm({ uploadDir, keepExtensions: true });
 
   const data = await new Promise<{ fields: any; files: any }>((resolve, reject) => {
@@ -31,27 +29,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   });
 
-  // Log dei dati ricevuti
-  console.log('Dati ricevuti:', data);
-
-  // Accedi ai primi elementi degli array
+  // Access first elements from possible arrays
   const from = Array.isArray(data.fields.from) ? data.fields.from[0] : data.fields.from;
   const to = Array.isArray(data.fields.to) ? data.fields.to[0] : data.fields.to;
-
-  // Log per verificare il contenuto dei parametri 'from' e 'to'
-  console.log('Formato di partenza (from):', from);
-  console.log('Formato di destinazione (to):', to);
+  const file = Array.isArray(data.files.file) ? data.files.file[0] : data.files.file;
 
   if (!data.files?.file || !from || !to) {
-    return res.status(400).json({ error: 'Parametri mancanti' });
+    return res.status(400).json({ error: 'Missing parameters: file, from, or to' });
   }
 
-  // Converte `to` in minuscolo per evitare problemi di case-sensitivity
   const targetFormat = to.toLowerCase();
 
-  // Verifica se il formato di destinazione è valido
+  // Check if the target format is supported
   if (!validFormats.includes(targetFormat)) {
-    return res.status(400).json({ error: 'Formato di destinazione non valido' });
+    return res.status(400).json({ error: 'Invalid target format' });
+  }
+
+  // Check uploaded file extension matches the selected 'from' format
+  const uploadedExt = path.extname(file.originalFilename || '').replace('.', '').toLowerCase();
+  const expectedExt = from.toLowerCase();
+
+  if (uploadedExt !== expectedExt) {
+    return res.status(400).json({
+      error: `The uploaded file has extension .${uploadedExt}, but you selected .${expectedExt} as source format.`,
+    });
   }
 
   const inputPath = data.files.file[0].filepath;
@@ -61,32 +62,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const buffer = fs.readFileSync(inputPath);
 
-    // Gestione separata per SVG: lo convertiamo in PNG (formato raster)
+    // Special handling for SVG input: rasterize to PNG first
     if (from.toLowerCase() === 'svg' && targetFormat !== 'svg') {
       const convertedBuffer = await sharp(buffer)
-        .toFormat('png')  // Rasterizza l'SVG in PNG
+        .toFormat('png') // Rasterize SVG to PNG
         .toBuffer();
 
-      // Poi, procediamo con la conversione verso il formato finale
       const finalBuffer = await sharp(convertedBuffer)
-        .toFormat(targetFormat as unknown as sharp.AvailableFormatInfo)
+        .toFormat(targetFormat as sharp.AvailableFormatInfo)
         .toBuffer();
 
       res.setHeader('Content-Type', `image/${targetFormat}`);
       res.setHeader('Content-Disposition', `attachment; filename="${inputFilename}.${targetFormat}"`);
-      res.send(finalBuffer);
+      return res.send(finalBuffer);
     } else {
-      // Converte l'immagine nel formato desiderato se non è SVG
+      // Convert directly if not SVG
       const convertedBuffer = await sharp(buffer)
-        .toFormat(targetFormat as unknown as sharp.AvailableFormatInfo) // cast esplicito
+        .toFormat(targetFormat as sharp.AvailableFormatInfo)
         .toBuffer();
 
       res.setHeader('Content-Type', `image/${targetFormat}`);
       res.setHeader('Content-Disposition', `attachment; filename="${inputFilename}.${targetFormat}"`);
-      res.send(convertedBuffer);
+      return res.send(convertedBuffer);
     }
   } catch (error) {
-    console.error('Errore nella conversione immagine:', error);
-    res.status(500).json({ error: 'Errore durante la conversione dell\'immagine' });
+    console.error('Image conversion error:', error);
+    return res.status(500).json({ error: 'An error occurred during image conversion' });
   }
 }
