@@ -18,16 +18,16 @@ export default function ImageConvertPage() {
 
   const handleConvert = async () => {
     if (!file) {
-      setMessage('❗ Seleziona un file da convertire.');
+      setMessage('❗ Please select a file to convert.');
       return;
     }
 
     if (sourceFormat === targetFormat) {
-      setMessage('⚠️ Il formato di partenza e di destinazione devono essere diversi.');
+      setMessage('⚠️ The source and target formats must be different.');
       return;
     }
 
-    setMessage('⚙️ Conversione in corso...');
+    setMessage('⚙️ Conversion in progress...');
 
     const formData = new FormData();
     formData.append('file', file);
@@ -41,7 +41,7 @@ export default function ImageConvertPage() {
       });
 
       if (!res.ok) {
-        throw new Error('Errore nella conversione');
+        throw new Error('Error during conversion');
       }
 
       const blob = await res.blob();
@@ -52,20 +52,20 @@ export default function ImageConvertPage() {
       link.download = `converted.${targetFormat}`;
       link.click();
 
-      setMessage('✅ Conversione completata!');
+      setMessage('✅ Conversion completed!');
     } catch (error) {
       console.error(error);
-      setMessage('❌ Errore durante la conversione.');
+      setMessage('❌ Error during conversion.');
     }
   };
 
   return (
     <div className="min-h-screen bg-white px-4 py-8 flex flex-col items-center">
       <div className="w-full max-w-xl bg-gray-50 border border-gray-200 p-6 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold mb-6 text-center">Converti Immagine</h1>
+        <h1 className="text-3xl font-bold mb-6 text-center">Convert Image</h1>
 
         <div className="mb-4">
-          <label className="block mb-1 font-medium">Formato di partenza:</label>
+          <label className="block mb-1 font-medium">Source Format:</label>
           <select
             value={sourceFormat}
             onChange={(e) => setSourceFormat(e.target.value)}
@@ -78,7 +78,7 @@ export default function ImageConvertPage() {
         </div>
 
         <div className="mb-4">
-          <label className="block mb-1 font-medium">Formato di destinazione:</label>
+          <label className="block mb-1 font-medium">Target Format:</label>
           <select
             value={targetFormat}
             onChange={(e) => setTargetFormat(e.target.value)}
@@ -92,14 +92,14 @@ export default function ImageConvertPage() {
 
         <div className="mb-4">
           <label className="cursor-pointer bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition block text-center">
-            Seleziona immagine
+            Select Image
             <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
           </label>
         </div>
 
         {file && (
           <p className="text-sm text-center text-gray-600 mb-4">
-            📁 File selezionato: <strong>{file.name}</strong>
+            📁 Selected file: <strong>{file.name}</strong>
           </p>
         )}
 
@@ -108,7 +108,7 @@ export default function ImageConvertPage() {
             onClick={handleConvert}
             className="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition"
           >
-            Converti
+            Convert
           </button>
         </div>
 

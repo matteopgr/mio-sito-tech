@@ -2,45 +2,27 @@
 
 import { useState, useEffect } from 'react';
 
-const supportedFormats = ['docx', 'pdf', 'txt', 'md', 'html'];
+const supportedConversions = {
+  json: ['csv', 'yaml'],
+  csv: ['json'],
+  yaml: ['json'],
+  text: ['base64'],
+  base64: ['text'],
+} as const;
 
-// List of supported format pairs
-const validPairs: [string, string][] = [
-  ['docx', 'pdf'],
-  ['txt', 'md'],
-  ['html', 'pdf'],
-];
+type FormatType = keyof typeof supportedConversions;
 
-// Build bidirectional conversion map
-const buildConversionMap = () => {
-  const map: Record<string, string[]> = {};
-
-  validPairs.forEach(([from, to]) => {
-    if (!map[from]) map[from] = [];
-    if (!map[to]) map[to] = [];
-
-    if (!map[from].includes(to)) map[from].push(to);
-    if (!map[to].includes(from)) map[to].push(from); // bidirectional
-  });
-
-  return map;
-};
-
-const conversionMap = buildConversionMap();
-
-export default function FileConversionPage() {
+export default function ProgrammingConversionPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [fromFormat, setFromFormat] = useState<string>('docx');
-  const [toFormat, setToFormat] = useState<string>('pdf');
+  const [fromFormat, setFromFormat] = useState<FormatType>('json');
+  const [toFormat, setToFormat] = useState<string>('csv');
   const [message, setMessage] = useState<string | null>(null);
-  const [acceptTypes, setAcceptTypes] = useState<string>('.docx');
+  const [acceptTypes, setAcceptTypes] = useState('.json');
 
   useEffect(() => {
-    setAcceptTypes(`.${fromFormat}`);
-    const validTargets = conversionMap[fromFormat];
-    if (!validTargets.includes(toFormat)) {
-      setToFormat(validTargets[0]);
-    }
+    setToFormat(supportedConversions[fromFormat][0]);
+    const ext = fromFormat === 'text' || fromFormat === 'base64' ? '.txt' : `.${fromFormat}`;
+    setAcceptTypes(ext);
   }, [fromFormat]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,12 +33,12 @@ export default function FileConversionPage() {
 
   const handleConvert = async () => {
     if (!file) {
-      setMessage('❗ Please select a file before converting.');
+      setMessage('❗ Please select a file to convert.');
       return;
     }
 
     if (fromFormat === toFormat) {
-      setMessage('⚠️ The source and destination formats must be different.');
+      setMessage('⚠️ The source and target formats must be different.');
       return;
     }
 
@@ -68,14 +50,12 @@ export default function FileConversionPage() {
     formData.append('to', toFormat);
 
     try {
-      const res = await fetch('/api/convert/file', {
+      const res = await fetch('/api/convert/programming', {
         method: 'POST',
         body: formData,
       });
 
-      if (!res.ok) {
-        throw new Error('Error during conversion');
-      }
+      if (!res.ok) throw new Error('Error during conversion');
 
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -87,61 +67,55 @@ export default function FileConversionPage() {
 
       setMessage('✅ Conversion completed!');
     } catch (error) {
-      setMessage('❌ Error during conversion.');
       console.error(error);
+      setMessage('❌ Error during conversion.');
     }
   };
 
   return (
     <div className="min-h-screen bg-white px-4 py-8 flex flex-col items-center">
       <div className="w-full max-w-xl bg-gray-50 border border-gray-200 p-6 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold mb-4 text-center">Convert File</h1>
+        <h1 className="text-3xl font-bold mb-4 text-center">Programming Conversions</h1>
         <p className="mb-6 text-gray-700 text-center">
-          Upload a file to convert it to another format.
+          Convert files between JSON, CSV, YAML, Base64, and Text formats.
         </p>
 
-        {/* Select input format */}
+        {/* FROM Format */}
         <div className="mb-4">
-          <label htmlFor="fromFormat" className="block text-gray-700 mb-2">
-            Source format:
-          </label>
+          <label className="block text-gray-700 mb-2">Source Format:</label>
           <select
-            id="fromFormat"
             value={fromFormat}
-            onChange={(e) => setFromFormat(e.target.value)}
+            onChange={(e) => setFromFormat(e.target.value as FormatType)}
             className="w-full p-2 border border-gray-300 rounded-md"
           >
-            {Object.keys(conversionMap).map((format) => (
+            {Object.keys(supportedConversions).map((format) => (
               <option key={format} value={format}>
-                .{format}
+                {format.toUpperCase()}
               </option>
             ))}
           </select>
         </div>
 
-        {/* Select output format */}
+        {/* TO Format */}
         <div className="mb-4">
-          <label htmlFor="toFormat" className="block text-gray-700 mb-2">
-            Destination format:
-          </label>
+          <label className="block text-gray-700 mb-2">Target Format:</label>
           <select
-            id="toFormat"
             value={toFormat}
             onChange={(e) => setToFormat(e.target.value)}
             className="w-full p-2 border border-gray-300 rounded-md"
           >
-            {conversionMap[fromFormat].map((format) => (
+            {supportedConversions[fromFormat].map((format) => (
               <option key={format} value={format}>
-                .{format}
+                {format.toUpperCase()}
               </option>
             ))}
           </select>
         </div>
 
-        {/* File upload button */}
+        {/* File input */}
         <div className="mb-4 flex justify-center">
           <label className="cursor-pointer bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition">
-            Select File
+            Select file
             <input
               type="file"
               accept={acceptTypes}
@@ -151,24 +125,24 @@ export default function FileConversionPage() {
           </label>
         </div>
 
-        {/* Selected file name */}
+        {/* File name */}
         {file && (
           <p className="text-sm text-center text-gray-600 mb-4">
             📄 Selected file: <strong>{file.name}</strong>
           </p>
         )}
 
-        {/* Conversion button */}
+        {/* Convert button */}
         <div className="flex justify-center">
           <button
             onClick={handleConvert}
             className="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition cursor-pointer"
           >
-            Convert File
+            Convert file
           </button>
         </div>
 
-        {/* Status message */}
+        {/* Message */}
         {message && (
           <p className="mt-6 text-center text-gray-800">{message}</p>
         )}
