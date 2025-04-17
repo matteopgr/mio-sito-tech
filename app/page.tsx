@@ -2,10 +2,35 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFile, faImage } from '@fortawesome/free-regular-svg-icons';
 import Link from "next/link";
 import { faComputer, faLock } from '@fortawesome/free-solid-svg-icons';
+import Head from 'next/head';
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white p-6">
+    <>
+    <Head>
+        <title>Tech Converter – Convert Files Instantly</title>
+        <meta name="description" content="Convert your files instantly online – DOCX, PDF, JSON, CSV, images, and more. Free, fast, and no installation needed." />
+        <meta name="keywords" content="file converter, convert pdf, convert docx, convert json, online file converter, pdf to docx, json to csv, tech converter" />
+        <meta name="author" content="Tech Converter Team" />
+
+        {/* Open Graph (Facebook, LinkedIn) */}
+        <meta property="og:title" content="Tech Converter – Convert Files Instantly" />
+        <meta property="og:description" content="Convert DOCX to PDF, JSON to CSV, and more formats online with ease." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://techconverter.vercel.app" />
+        <meta property="og:image" content="https://techconverter.vercel.app/preview.png" />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Tech Converter – Convert Files Instantly" />
+        <meta name="twitter:description" content="Free and fast online file converter for text, documents and images." />
+        <meta name="twitter:image" content="https://techconverter.vercel.app/preview.png" />
+        
+        <meta name="google-site-verification" content="jP_O-pdub1JiA3vbEGax-zl_pG3eBlTJqU3zCmj4iqY" />
+      </Head>
+
+    <main>
+      <div className="min-h-screen bg-white p-6">
       <h1 className="text-4xl font-bold text-center mb-6">Welcome to Tech Converter</h1>
       <p className="text-xl text-center mb-12">A website to convert various file formats according to your needs</p>
 
@@ -63,5 +88,7 @@ export default function HomePage() {
         </Link>
       </div>
     </div>
+    </main>
+  </>
   );
 }
