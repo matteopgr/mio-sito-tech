@@ -25,8 +25,6 @@ export default function HomePage() {
         <meta name="twitter:title" content="Tech Converter – Convert Files Instantly" />
         <meta name="twitter:description" content="Free and fast online file converter for text, documents and images." />
         <meta name="twitter:image" content="https://techconverter.vercel.app/preview.png" />
-        
-        <meta name="google-site-verification" content="jP_O-pdub1JiA3vbEGax-zl_pG3eBlTJqU3zCmj4iqY" />
       </Head>
 
     <main>
