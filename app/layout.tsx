@@ -11,6 +11,7 @@ export default function RootLayout({
     <html lang="it">
       <body className="min-h-screen bg-white text-gray-900">
         <Navbar />
+        <Analytics/>
         <main className="p-4 overflow-auto">{children}</main>
       </body>
     </html>
