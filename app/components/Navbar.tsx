@@ -26,7 +26,6 @@ export default function Navbar() {
         {/* Desktop Menu */}
         <div className="hidden lg:flex space-x-6">
           <Link href="/" className="hover:text-gray-100 transition">Home</Link>
-          <Link href="/features" className="hover:text-gray-100 transition">Features</Link>
           <Link href="/about" className="hover:text-gray-100 transition">About</Link>
           <Link href="/contact" className="hover:text-gray-100 transition">Contact</Link>
         </div>
@@ -41,13 +40,6 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
           >
             Home
-          </Link>
-          <Link
-            href="/features"
-            className="block py-2 border-b border-white/20 hover:bg-blue-700 rounded-md transition"
-            onClick={() => setMenuOpen(false)}
-          >
-            Features
           </Link>
           <Link
             href="/about"
