@@ -3,6 +3,7 @@ import { faFile, faImage } from '@fortawesome/free-regular-svg-icons';
 import Link from "next/link";
 import { faComputer, faLock } from '@fortawesome/free-solid-svg-icons';
 import Head from 'next/head';
+import GoogleAd from './components/GoogleAd';
 
 export default function HomePage() {
   return (
@@ -85,6 +86,7 @@ export default function HomePage() {
           </ul>
         </Link>
       </div>
+      <GoogleAd/>
     </div>
     </main>
   </>
